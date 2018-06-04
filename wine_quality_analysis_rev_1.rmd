@@ -1,0 +1,599 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+White Wine Quality Exploration by Rob Fitch
+========================================================
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using in your analysis in this code
+# chunk.
+
+# Notice that the parameter "echo" was set to FALSE for this code chunk. This
+# prevents the code from displaying in the knitted HTML output. You should set
+# echo=FALSE for all code chunks in your file, unless it makes sense for your
+# report to show the code that generated a particular plot.
+
+# The other parameters for "message" and "warning" should also be set to FALSE
+# for other code chunks once you have verified that each plot comes out as you
+# want it to. This will clean up the flow of your report.
+
+library(ggplot2)
+library(GGally)
+library(gridExtra)
+library(reshape2)
+```
+
+```{r echo=FALSE, Load_the_Data}
+# Load the Data
+white_wine_data <- read.csv("wineQualityWhites.csv")
+colnames(white_wine_data)[1] = "id"
+str(white_wine_data)
+```
+
+> There are 4,898 sampled wines, each with 13 associated values. For each wine, there is a unique id and a quality rating given by a wine expert. Each also has the included volume of 11 chemical compounds that may contribute to the quality of a wine.
+
+```{r echo=FALSE, Data_Summary}
+summary(white_wine_data)
+```
+
+> Excepting density, pH and alcohol, the 8 remaining predictive values show significant potential outliers in the statistical summary.
+
+# Univariate Plots Section
+> To evaluate the values in the provided dataset and eliminate outliers, I am plotting a histogram and boxplot for each variable with all data points included, then plotting them again without the highest and lowest 1% of values included. If I use all 11 variables to trim the dataset then 22% or less of the data will be dropped.
+
+```{r echo=FALSE, Univariate_Fixed_Acidity_plots}
+f_acid_low = quantile(white_wine_data$fixed.acidity, 0.01)
+f_acid_high = quantile(white_wine_data$fixed.acidity, 0.99)
+grid.arrange(ggplot(aes(x=fixed.acidity), data=white_wine_data) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=fixed.acidity), data=white_wine_data) +
+               geom_boxplot(), 
+             ggplot(aes(x=fixed.acidity), 
+                    data=subset(white_wine_data, 
+                                fixed.acidity > f_acid_low & 
+                                fixed.acidity < f_acid_high)) +
+               geom_histogram(bins=40),
+             ggplot(aes(x=1, y=fixed.acidity), data=subset(white_wine_data, 
+                                fixed.acidity > f_acid_low & 
+                                fixed.acidity < f_acid_high)) +
+               geom_boxplot(), 
+             ncol=2)
+```
+
+```{r echo=FALSE, Univariate_Fixed_Acidity_Summary}
+summary(white_wine_data$fixed.acidity)
+```
+
+```{r echo=FALSE, Univariate_Abridged_Fixed_Acidity_Summary}
+summary(subset(white_wine_data$fixed.acidity, 
+               white_wine_data$fixed.acidity > f_acid_low & 
+                 white_wine_data$fixed.acidity < f_acid_high))
+```
+
+> While the fixed acidity data is easier to plot with the highest and lowest 1% of the values dropped, it is not a large shift. Interestingly, the quartiles and medians are unchanged with this loss of data. I am using this to trim outliers from the data.
+
+```{r echo=FALSE, Univariate_Volatile_Acidity_plots}
+v_acid_low = quantile(white_wine_data$volatile.acidity, 0.01)
+v_acid_high = quantile(white_wine_data$volatile.acidity, 0.99)
+grid.arrange(ggplot(aes(x=volatile.acidity), data=white_wine_data) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=volatile.acidity), data=white_wine_data) +
+               geom_boxplot(),
+             ggplot(aes(x=volatile.acidity), data=subset(white_wine_data, 
+                                volatile.acidity > v_acid_low & 
+                                volatile.acidity < v_acid_high)) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=volatile.acidity), data=subset(white_wine_data, 
+                                volatile.acidity > v_acid_low & 
+                                volatile.acidity < v_acid_high)) +
+               geom_boxplot(), ncol=2)
+```
+
+```{r echo=FALSE, Univariate_Volatile_Acidity_Summary}
+summary(white_wine_data$volatile.acidity)
+```
+```{r echo=FALSE, Univariate_Abridged_Volatile_Acidity_Summary}
+summary(subset(white_wine_data$volatile.acidity, 
+               white_wine_data$volatile.acidity > v_acid_low & 
+                 white_wine_data$volatile.acidity < v_acid_high))
+```
+
+> Unsurprisingly, volatile acidity shows properties very similar to fixed acidity and will also be included in outlier filtering.
+
+```{r echo=FALSE, Univariate_Citrix_Acid_plots}
+c_acid_low = quantile(white_wine_data$citric.acid, 0.01)
+c_acid_high = quantile(white_wine_data$citric.acid, 0.99)
+grid.arrange(ggplot(aes(x=citric.acid), data=white_wine_data) +
+               geom_histogram(bins=50), 
+             ggplot(aes(x=1, y=citric.acid), data=white_wine_data) +
+               geom_boxplot(),
+             ggplot(aes(x=citric.acid), data=subset(white_wine_data, 
+                                citric.acid > c_acid_low & 
+                                citric.acid < c_acid_high)) +
+               geom_histogram(bins=50), 
+             ggplot(aes(x=1, y=citric.acid), data=subset(white_wine_data, 
+                                citric.acid > c_acid_low & 
+                                citric.acid < c_acid_high)) +
+               geom_boxplot(), ncol=2)
+```
+
+```{r echo=FALSE, Univariate_Citrix_Acid_Summary}
+summary(white_wine_data$citric.acid)
+```
+```{r echo=FALSE, Univariate_Abridged_Citrix_Acid_Summary}
+summary(subset(white_wine_data$citric.acid, 
+               white_wine_data$citric.acid > c_acid_low & 
+               white_wine_data$citric.acid < c_acid_high))
+```
+
+> The statistics for citric acid is the first variable to show movement on the 3rd quartile. Despite the small movement in the mean, the max value dropped to less than half the original.
+
+```{r echo=FALSE, Univariate_Residual_Sugar_plots}
+r_sugar_low = quantile(white_wine_data$residual.sugar, 0.01)
+r_sugar_high = quantile(white_wine_data$residual.sugar, 0.99)
+grid.arrange(ggplot(aes(x=residual.sugar), data=white_wine_data) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=residual.sugar), data=white_wine_data) +
+               geom_boxplot(),
+             ggplot(aes(x=residual.sugar), data=subset(white_wine_data, 
+               residual.sugar > r_sugar_low & 
+               residual.sugar < r_sugar_high)) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=residual.sugar), data=subset(white_wine_data, 
+               residual.sugar > r_sugar_low & 
+               residual.sugar < r_sugar_high)) +
+               geom_boxplot(),ncol=2)
+```
+
+```{r echo=FALSE, Univariate_Residual_Sugar_Summary}
+summary(white_wine_data$residual.sugar)
+```
+```{r echo=FALSE, Univariate_Abridged_Residual_Sugar_Summary}
+summary(subset(white_wine_data$residual.sugar, 
+               white_wine_data$residual.sugar > r_sugar_low & 
+               white_wine_data$residual.sugar < r_sugar_high))
+```
+
+> Residual sugar shows movement in the 1st quartile, 3rd quartile and the mean suggesting that the removed points had significan influence. I will be using residual sugar to filter the dataset.
+
+```{r echo=FALSE, Univariate_Chlorides_plots}
+chlor_low = quantile(white_wine_data$chlorides, 0.01)
+chlor_high = quantile(white_wine_data$chlorides, 0.99)
+grid.arrange(ggplot(aes(x=chlorides), data=white_wine_data) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=chlorides), data=white_wine_data) +
+               geom_boxplot(),
+             ggplot(aes(x=chlorides), data=subset(white_wine_data, 
+               chlorides > chlor_low & 
+               chlorides < chlor_high)) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=chlorides), data=subset(white_wine_data, 
+               chlorides > chlor_low & 
+               chlorides < chlor_high)) +
+               geom_boxplot(),ncol=2)
+```
+
+```{r echo=FALSE, Univariate_Chlorides_Summary}
+summary(white_wine_data$chlorides)
+```
+```{r echo=FALSE, Univariate_Abridged_Chlorides_Summary}
+summary(subset(white_wine_data$chlorides, 
+               white_wine_data$chlorides > chlor_low & 
+               white_wine_data$chlorides < chlor_high))
+```
+
+> Chlorides are also showing significant reduction in max value and minor movement of mean. The shape of the histogram is mostly unchanged while the right tail is significantly shortened. I am including chlorides in the data point filters.
+
+```{r echo=FALSE, Univariate_Free_Sulfur_Dioxide_plots}
+f_sulf_low = quantile(white_wine_data$free.sulfur.dioxide, 0.01)
+f_sulf_high = quantile(white_wine_data$free.sulfur.dioxide, 0.99)
+grid.arrange(ggplot(aes(x=free.sulfur.dioxide), data=white_wine_data) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=free.sulfur.dioxide), data=white_wine_data) +
+               geom_boxplot(),
+             ggplot(aes(x=free.sulfur.dioxide), data=subset(white_wine_data, 
+               free.sulfur.dioxide > f_sulf_low & 
+               free.sulfur.dioxide < f_sulf_high)) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=free.sulfur.dioxide), 
+                    data=subset(white_wine_data, 
+               free.sulfur.dioxide > f_sulf_low & 
+               free.sulfur.dioxide < f_sulf_high)) +
+               geom_boxplot(),ncol=2)
+```
+
+```{r echo=FALSE, Univariate_Free_Sulfur_Dioxide_Summary}
+summary(white_wine_data$free.sulfur.dioxide)
+```
+```{r echo=FALSE, Univariate_Abridged_Free_Sulfur_Dioxide_Summary}
+summary(subset(white_wine_data$free.sulfur.dioxide, 
+               white_wine_data$free.sulfur.dioxide > f_sulf_low & 
+               white_wine_data$free.sulfur.dioxide < f_sulf_high))
+```
+
+> Free Sulfur Dioxide features a large move towards a normal distribution. Losing only the high and low 1% caused every statistic except median to shift towards center. I am trimming the data points using Free Sulfur Dioxide quantiles.
+
+```{r echo=FALSE, Univariate_Total_Sulfur_Dioxide_plots}
+t_sulf_low = quantile(white_wine_data$total.sulfur.dioxide, 0.01)
+t_sulf_high = quantile(white_wine_data$total.sulfur.dioxide, 0.99)
+grid.arrange(ggplot(aes(x=total.sulfur.dioxide), data=white_wine_data) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=total.sulfur.dioxide), data=white_wine_data) +
+               geom_boxplot(),
+             ggplot(aes(x=total.sulfur.dioxide), data=subset(white_wine_data, 
+               total.sulfur.dioxide > t_sulf_low & 
+               total.sulfur.dioxide < t_sulf_high)) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=total.sulfur.dioxide), 
+                    data=subset(white_wine_data, 
+               total.sulfur.dioxide > t_sulf_low & 
+               total.sulfur.dioxide < t_sulf_high)) +
+               geom_boxplot(),ncol=2)
+```
+
+```{r echo=FALSE, Univariate_Total_Sulfur_Dioxide_Summary}
+summary(white_wine_data$total.sulfur.dioxide)
+```
+```{r echo=FALSE, Univariate_Abridged_Total_Sulfur_Dioxide_Summary}
+summary(subset(white_wine_data$total.sulfur.dioxide, 
+               white_wine_data$total.sulfur.dioxide > t_sulf_low & 
+               white_wine_data$total.sulfur.dioxide < t_sulf_high))
+```
+
+> Total Sulfur Dioxide shows the same shifts in statistics and changes in shape as free sulfur dioxide, this will also be included in the data point filtering.
+
+```{r echo=FALSE, Univariate_Density_plots}
+dens_low = quantile(white_wine_data$density, 0.01)
+dens_high = quantile(white_wine_data$density, 0.99)
+grid.arrange(ggplot(aes(x=density), data=white_wine_data) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=density), data=white_wine_data) +
+               geom_boxplot(),
+             ggplot(aes(x=density), data=subset(white_wine_data, 
+               density > dens_low & 
+               density < dens_high)) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=density), data=subset(white_wine_data, 
+               density > dens_low & 
+               density < dens_high)) +
+               geom_boxplot(),ncol=2)
+```
+
+```{r echo=FALSE, Univariate_Density_Summary}
+summary(white_wine_data$density)
+```
+```{r echo=FALSE, Univariate_Abridged_Density_Summary}
+summary(subset(white_wine_data$density, 
+               white_wine_data$density > dens_low & 
+               white_wine_data$density < dens_high))
+```
+
+> Density also shows an improvement in the histogram shape towards a normal distribution. This value will be used to trim the data points.
+
+```{r echo=FALSE, Univariate_pH_plots}
+pH_low = quantile(white_wine_data$pH, 0.01)
+pH_high = quantile(white_wine_data$pH, 0.99)
+grid.arrange(ggplot(aes(x=pH), data=white_wine_data) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=pH), data=white_wine_data) +
+               geom_boxplot(),
+             ggplot(aes(x=pH), data=subset(white_wine_data, 
+               pH > pH_low & 
+               pH < pH_high)) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=pH), data=subset(white_wine_data, 
+               pH > pH_low & 
+               pH < pH_high)) +
+               geom_boxplot(),ncol=2)
+```
+
+```{r echo=FALSE, Univariate_pH_Summary}
+summary(white_wine_data$pH)
+```
+```{r echo=FALSE, Univariate_Abridged_pH_Summary}
+summary(subset(white_wine_data$pH, 
+               white_wine_data$pH > pH_low & 
+               white_wine_data$pH < pH_high))
+```
+
+> Trimming the dataset using pH has little impact on the statistical values. It does not appear that using this value to trim the dataset will be helpful.
+
+```{r echo=FALSE, Univariate_Sulphates_plots}
+sulph_low = quantile(white_wine_data$sulphates, 0.01)
+sulph_high = quantile(white_wine_data$sulphates, 0.99)
+grid.arrange(ggplot(aes(x=sulphates), data=white_wine_data) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=sulphates), data=white_wine_data) +
+               geom_boxplot(),
+             ggplot(aes(x=sulphates), data=subset(white_wine_data, 
+               sulphates > sulph_low & 
+               sulphates < sulph_high)) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=sulphates), data=subset(white_wine_data, 
+               sulphates > sulph_low & 
+               sulphates < sulph_high)) +
+               geom_boxplot(),ncol=2)
+```
+
+```{r echo=FALSE, Univariate_Sulphates_Summary}
+summary(white_wine_data$sulphates)
+```
+```{r echo=FALSE, Univariate_Abridged_Sulphates_Summary}
+summary(subset(white_wine_data$sulphates, 
+               white_wine_data$sulphates > sulph_low & 
+               white_wine_data$sulphates < sulph_high))
+```
+> Like pH, trimming the data by sulfate quantiles appears to have little effect on the overall appearance or the statistics of the dataset.
+
+```{r echo=FALSE, Univariate_Alcohol_plots}
+alco_low = quantile(white_wine_data$alcohol, 0.01)
+alco_high = quantile(white_wine_data$alcohol, 0.99)
+grid.arrange(ggplot(aes(x=alcohol), data=white_wine_data) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=alcohol), data=white_wine_data) +
+               geom_boxplot(),
+             ggplot(aes(x=alcohol), data=subset(white_wine_data, 
+               alcohol > alco_low & 
+               alcohol < alco_high)) +
+               geom_histogram(bins=40),
+             ggplot(aes(x=1, y=alcohol), data=subset(white_wine_data, 
+               alcohol > alco_low & 
+               alcohol < alco_high)) +
+               geom_boxplot(),ncol=2)
+```
+
+```{r echo=FALSE, Univariate_Alcohol_Summary}
+summary(white_wine_data$alcohol)
+```
+```{r echo=FALSE, Univariate_Abridged_Alcohol_Summary}
+summary(subset(white_wine_data$alcohol, 
+               white_wine_data$alcohol > alco_low & 
+               white_wine_data$alcohol < alco_high))
+```
+
+> Alcohol shows no sign of significant outliers, the statistics are mostly unchanged by trimming and alcohol will not be used as a filtering criteria in the dataset.
+
+```{r echo=FALSE, Univariate_Quality_plots}
+grid.arrange(ggplot(aes(x=quality), data=white_wine_data) +
+               geom_histogram(bins=50),
+             ggplot(aes(x=1, y=quality), data=white_wine_data) +
+               geom_boxplot(), ncol=2)
+```
+
+```{r echo=FALSE, Univariate_Quality_Summary}
+summary(white_wine_data$quality)
+```
+
+> I am not trimming the outlying samples in the quality values as it would reduce the variety in the target value. I considered resampling the dataset to even out the labels but have chosen to preserve the target labels to the greatest extent I can manage.
+
+# Univariate Analysis
+> The dataset presents a set of white wines with normally distributed quality scores centered on a score of 6. Setting aside the index (_id) and the output label (quality), the remaining portion of the dataset consists of 9 descriptive variables with continuous values. It is notable that while the distributions are roughly normal, the data shows consistent long right tails.
+It explores chemical makeup of white wines. The acidity, sulfur and alcohol levels look to have enough variation in their values to be good predictors. 
+With a discrete and normal distribution, quality is a challenge to predict. I believe that the skew on alcohol will make it a good predictive base. 
+
+# Bivariate Plots Section
+```{r echo=FALSE, Data_Abridgement}
+abridged_wine_data <- subset(white_wine_data, 
+                             citric.acid > c_acid_low &
+                               citric.acid < c_acid_high &
+                               chlorides > chlor_low &
+                               chlorides < chlor_high &
+                               density > dens_low &
+                               density < dens_high &
+                               fixed.acidity > f_acid_low & 
+                               fixed.acidity < f_acid_high &
+                               free.sulfur.dioxide > f_sulf_low &
+                               free.sulfur.dioxide < f_sulf_high &
+                               residual.sugar > r_sugar_low &
+                               residual.sugar < r_sugar_high &
+                               total.sulfur.dioxide > t_sulf_low &
+                               total.sulfur.dioxide < t_sulf_high &
+                               volatile.acidity > v_acid_low &
+                               volatile.acidity < v_acid_high)
+abridged_wine_data$f_quality <- factor(abridged_wine_data$quality)
+str(abridged_wine_data)
+```
+
+> Approximately 85% of the original datapoints have been preserved in the dataset to this point. In exploring the relationships between values, and the ability of these values to predict the quality rating, I am assuming that outliers have been removed.
+
+```{r echo=FALSE, Bivariate_Plots_0}
+ggcorr(abridged_wine_data, label=TRUE)
+```
+
+> Several items stand out immediately with the correlations above; sulphates, free sulfur dioxide and citrix acid have no correlation with quality. Citric acid is weakly correlated with everyhing except quality and not predictive of quality.
+Additionally, the strongest correlations in the dataset are the residual sugar/density pair, and the density/alcohol pair. Interestingly, residual sugar/alcohol is less correlated than either variable is correlated with density. Alcohol, density and chlorides appear to be the best options for predicting quality rating.
+
+```{r echo=FALSE, Bivariate__Quality_vs_Acidity_Plots}
+grid.arrange(
+  ggplot(aes(x=factor(quality), y=fixed.acidity), data=abridged_wine_data) +
+  geom_jitter(alpha=0.1) +
+  geom_boxplot(alpha=0.5, color='purple') +
+  stat_summary(fun.y='mean', geom='point', color='red', shape=8, size=4),
+  ggplot(aes(x=factor(quality), y=volatile.acidity), data=abridged_wine_data) +
+  geom_jitter(alpha=0.1) +
+  geom_boxplot(alpha=0.5, color='purple') +
+  stat_summary(fun.y='mean', geom='point', color='red', shape=8, size=4), 
+  ncol=2)
+```
+
+> Volatile acidity appears to have no pattern in comparison to quality. Fixed acidity, on the other hand, appears to indicate that lower fixed acidity tends towards more central quality values. A relationship that could be exploited to bias a model.
+
+```{r echo=FALSE, Bivariate__Quality_vs_Sulfur_Dioxide_Plots}
+grid.arrange(
+  ggplot(aes(x=factor(quality), y=free.sulfur.dioxide), 
+         data=abridged_wine_data) +
+  geom_jitter(alpha=0.1) +
+  geom_boxplot(alpha=0.5, color='purple') +
+  stat_summary(fun.y='mean', geom='point', color='red', shape=8, size=4),
+  ggplot(aes(x=factor(quality), y=total.sulfur.dioxide), 
+         data=abridged_wine_data) +
+  geom_jitter(alpha=0.1) +
+  geom_boxplot(alpha=0.5, color='purple') +
+  stat_summary(fun.y='mean', geom='point', color='red', shape=8, size=4), 
+  ncol=2)
+```
+
+> Sulfur dioxide levels do not appear to have a predictable impact on quality rating. I will not be further exploring this relationship.
+
+```{r echo=FALSE, Bivariate__Quality_vs_Residual_Sugar_and_Density_Plots}
+grid.arrange(
+  ggplot(aes(x=factor(quality), y=residual.sugar), data=abridged_wine_data) +
+  geom_jitter(alpha=0.1) +
+  geom_boxplot(alpha=0.5, color='purple') +
+  stat_summary(fun.y='mean', geom='point', color='red', shape=8, size=4),
+  ggplot(aes(x=factor(quality), y=density), data=abridged_wine_data) +
+  geom_jitter(alpha=0.1) +
+  geom_boxplot(alpha=0.5, color='purple') +
+  stat_summary(fun.y='mean', geom='point', color='red', shape=8, size=4), 
+  ncol=2)
+```
+
+> Both residual sugar and density show a significant negative trend as quality rises. Both of these relationships will be explored in more depth.
+
+```{r echo=FALSE, Bivariate__Quality_vs_Chlorides_and_pH_Plots}
+grid.arrange(
+  ggplot(aes(x=factor(quality), y=chlorides), data=abridged_wine_data) +
+  geom_jitter(alpha=0.1) +
+  geom_boxplot(alpha=0.5, color='purple') +
+  stat_summary(fun.y='mean', geom='point', color='red', shape=8, size=4),
+  ggplot(aes(x=factor(quality), y=pH), data=abridged_wine_data) +
+  geom_jitter(alpha=0.1) +
+  geom_boxplot(alpha=0.5, color='purple') +
+  stat_summary(fun.y='mean', geom='point', color='red', shape=8, size=4), 
+  ncol=2)
+```
+
+> Chlorides continues the negative trend as quality rises. On the other hand, pH shows a low positive correlation. This is a curiousity as it is the opposite of the calculated correlation.
+
+```{r echo=FALSE, Bivariate__Quality_vs_Alcohol_Plot}
+ggplot(aes(x=factor(quality), y=alcohol), data=abridged_wine_data) +
+  geom_jitter(alpha=0.1) +
+  geom_boxplot(alpha=0.5, color='purple') +
+  stat_summary(fun.y='mean', geom='point', color='red', shape=8, size=4)
+```
+
+> Unexpectedly, the alcohol content is not as clear a correlation as expected, with very low quality wines having median alcohol content similar to midrange qualities.
+
+```{r echo=FALSE, Bivariate__Quality_vs_Top_Influences_Plot}
+grid.arrange(
+  ggplot(aes(x=residual.sugar, y=density), data=abridged_wine_data) +
+    geom_point(alpha=0.1) +
+    geom_smooth(alpha=0.5, method='lm', se=FALSE, size=1, color='purple'),
+  ggplot(aes(x=density, y=alcohol), data=abridged_wine_data) +
+    geom_point(alpha=0.1) +
+    geom_smooth(alpha=0.5, method='lm', se=FALSE, size=1, color='purple'),
+  ggplot(aes(x=residual.sugar, y=alcohol), data=abridged_wine_data) +
+    geom_point(alpha=0.1) +
+    geom_smooth(alpha=0.5, method='lm', se=FALSE, size=1, color='purple'), 
+  ncol=3)
+```
+
+> The majority of residual sugar values are near zero, reducing the ability to use other variables to predict sugar. The lower correlation between alcohol and residual sugar is visually apparent, even if the cause is not.
+
+
+# Bivariate Analysis
+> The value of interest, quality, appears best predicted by alcohol content, density and chlorides. With the outliers removed from the data these trends seem to bear out more clearly. The interrelations between alcohol, sugar and density indicate an underlying predictive variable that contributes to all 3. Extracting that value could outperform all three. 
+Of particular interest, density and residual sugar are strongly positively correlated. These variables track together well enough to be predictive of the potential outliers in the dataset (density 1.04).
+
+# Multivariate Plots Section
+```{r echo=FALSE, Multivariate_Plots_Faceted}
+ggplot(aes(x=alcohol, y=density), data=abridged_wine_data) +
+  geom_point(alpha=0.05, position=position_jitter(h=0)) +
+  scale_color_brewer(type = 'div') + facet_wrap(~ f_quality) +
+  coord_cartesian(ylim=c(0.985,1.005))
+```
+
+> Initial observation of the faceted plot of density vs alcohol across quality gives the impression of an overlapping space. More careful review shows that as alcohol content rises and density is reduced, quality improves. Below is a colored graph more clearly demonstrating this premise.
+
+```{r echo=FALSE, Multivariate_Plots_Sugar_Density}
+ggplot(aes(x=residual.sugar, y=density), data=abridged_wine_data) +
+  geom_point(alpha=1, aes(color=f_quality), position=position_jitter(h=0)) +
+  scale_color_brewer(type = 'div')
+```
+
+> The intersection between density and residual sugar draws distict separation between lower and upper levels of quality. These two variables, together, improve the predictability of quality.
+
+```{r echo=FALSE, Multivariate_Plots_Density_Alcohol}
+ggplot(aes(x=density, y=alcohol), data=abridged_wine_data) +
+  geom_point(alpha=1, aes(color=f_quality), position=position_jitter(h=0)) +
+  scale_color_brewer(type = 'div')
+```
+
+> Plotting density with alcohol does not appear to add any clarity beyond a plot of alcohol alone. This relation does not seem to contribute.
+
+```{r echo=FALSE, Multivariate_Plots_Sugar_Alcohol}
+ggplot(aes(x=residual.sugar, y=alcohol), data=abridged_wine_data) +
+  geom_point(alpha=1, aes(color=f_quality), position=position_jitter(h=0)) +
+  scale_color_brewer(type = 'div')
+```
+
+> Alcohol and residual sugar do present a gradient across the quality rating, showing improvements in prediction power over alcohol or residual sugar alone.
+
+```{r echo=FALSE, Multivariate_Plots_Density_Chlorides}
+ggplot(aes(x=density, y=chlorides), data=abridged_wine_data) +
+  geom_point(alpha=1, aes(color=f_quality), position=position_jitter(h=0)) +
+  scale_color_brewer(type = 'div')
+```
+
+> Combining chlorides and density grants a clear gradient across quality ratings, improving over either density or chlorides alone.
+
+# Multivariate Analysis
+> The negative density to alcohol relationship is maintained across the various quality values, with higher alcohol content and lower density having moderate predictive power for the quality metric. Using color to illuminate this relationship highlighted the trends in quality in relation to the variables. Higher alcohol values, lower densities, and lower chlorides are indicative of higher quality ratings.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+```{r echo=FALSE, Plot_One}
+ggplot(aes(x=residual.sugar, y=density), data=abridged_wine_data) +
+  geom_point(alpha=1, aes(color=f_quality)) + 
+  geom_smooth(alpha=0.5, method='lm', se=FALSE, size=1, color='orange') +
+  xlab("Residual Sugar (grams per liter)") +
+  ylab("Density (grams per milliliter)") +
+  ggtitle("Residual Sugar vs Density colored by Quality") +
+  theme(plot.title = element_text(hjust=0.5)) +
+  scale_color_brewer(type = 'div')
+```
+
+### Description One
+> Exploring how the quality rating stratifies in the relationship between wine density and residual sugar content. This separation gives a noisy gradient along density that follows a upward slope as residual sugar content rises. I chose to explore this due to the distinctive and clear positive correlation between the variables. I was able to highlight the dividing line between high and low quality ratings.
+
+### Plot Two
+```{r echo=FALSE, Plot_Two}
+ggplot(aes(x=residual.sugar, y=alcohol), data=abridged_wine_data) +
+  geom_point(alpha=1, aes(color=f_quality)) + 
+  geom_smooth(alpha=0.5, method='lm', se=FALSE, size=1, color='orange') +
+  xlab("Residual Sugar (grams per liter)") +
+  ylab("Alcohol % by volume") +
+  ggtitle("Residual Sugar vs Alcohol Content colored by Quality") +
+  theme(plot.title = element_text(hjust=0.5)) +
+  scale_color_brewer(type = 'div')
+
+```
+
+### Description Two
+> Applying color again significantly changed my interpretation of the plot. What I previously categorized as a formless blob shows a clear diagonal quality gradient, allowing distinctions to begin being made about quality ratings. Residual sugar appears to work with alcohol content, with increases in alcohol enhanced by increases in sugar content.
+
+### Plot Three
+```{r echo=FALSE, Plot_Three}
+ggplot(aes(x=factor(quality), y=chlorides), data=abridged_wine_data) +
+  geom_jitter(alpha=0.1) +
+  geom_boxplot(alpha=0.5, color='purple') +
+  xlab("Quality Rating, range 0 - 10") +
+  ylab("Chlorides (grams per liter)") +
+  ggtitle("Chlorides vs Quality") +
+  theme(plot.title = element_text(hjust=0.5)) +
+  stat_summary(fun.y='mean', geom='point', color='red', shape=8, size=4)
+```
+
+### Description Three
+> The relationship between chlorides and quality is clearly displayed here. With the median and mean chloride values decreasing as the quality rises, it appears chlorides directly reduce the quality of a wine.
+
+------
+
+# Reflection
+> I started this exploration, expecting alcohol content to have minimal or perhaps a low negative influence on quality rationg. Those expectations were dashed almost immediately. What I found instead was that higher alcohol content is favored. In addition, it appears that higher sugar content improves the quality of higher density wines, with lower densities being preferred.
+Additionally, my erroneous belief that wine quality rating would be primarily about the flavor experience, I expected larger influences from sulfur and acidity values, rather than the apparently low or neglible influcences.
+Going forward, I would want to apply dimensionality reduction algorithms to groups of the variables to extract the underlying components driving the quality rating. There are themes and patterns still remaining to be delineated in this data.
